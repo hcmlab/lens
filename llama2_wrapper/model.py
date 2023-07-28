@@ -88,7 +88,7 @@ class Llama2Wrapper:
         else:
             from transformers import TextIteratorStreamer
 
-            inputs = self.tokenizer([prompt], return_tensors="pt").to(conf)
+            inputs = self.tokenizer([prompt], return_tensors="pt")
 
             streamer = TextIteratorStreamer(
                 self.tokenizer, timeout=10.0, skip_prompt=True, skip_special_tokens=True
