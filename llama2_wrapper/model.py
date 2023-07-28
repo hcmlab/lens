@@ -42,7 +42,7 @@ class Llama2Wrapper:
         import torch
         from transformers import AutoTokenizer
 
-        tokenizer = AutoTokenizer.from_pretrained(model_name).to(torch.device(config["device"]))
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         return tokenizer
 
     def get_input_token_length(
