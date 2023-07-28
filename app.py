@@ -87,7 +87,7 @@ def assist():
         user_request = json.loads(request.get_json())
         message = user_request.get('message', '')
         history =  user_request.get('history', [])
-        system_prompt = "".join( [user_request.get('system_promt', DEFAULT_SYSTEM_PROMPT), user_request.get('data_desc', ''), user_request.get('data','') ])
+        system_prompt = "".join( [user_request.get('system_prompt', DEFAULT_SYSTEM_PROMPT), user_request.get('data_desc', ''), user_request.get('data','') ])
 
         ret = generate(message=message, history=history, system_prompt=system_prompt, max_new_tokens=1024, temperature=1, top_p=0.95, top_k=50)
         return app.response_class(ret, mimetype='text/csv')
