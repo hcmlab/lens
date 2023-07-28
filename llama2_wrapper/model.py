@@ -67,56 +67,49 @@ class Llama2Wrapper:
             top_p: float = 0.95,
             top_k: int = 50,
     ) -> Iterator[str]:
+        import torch
         prompt = get_prompt(message, chat_history, system_prompt)
-        if self.config.get("llama_cpp"):
-            inputs = self.model.tokenize(bytes(prompt, "utf-8"))
-            generate_kwargs = dict(
-                top_p=top_p,
-                top_k=top_k,
-                temp=temperature,
-            )
+        from transformers import TextIteratorStreamer
 
-            generator = self.model.generate(inputs, **generate_kwargs)
-            outputs = []
-            for token in generator:
-                if token == self.model.token_eos():
-                    break
-                b_text = self.model.detokenize([token])
-                text = str(b_text, encoding="utf-8")
-                outputs.append(text)
-                yield "".join(outputs)
-        else:
-            from transformers import TextIteratorStreamer
+        inputs = self.tokenizer([prompt], return_tensors="pt").to(torch.device(self.config['device']))
 
-            inputs = self.tokenizer([prompt], return_tensors="pt")
+        streamer = TextIteratorStreamer(
+            self.tokenizer, timeout=10.0, skip_prompt=True, skip_special_tokens=True
+        )
+        generate_kwargs = dict(
+            inputs,
+            streamer=streamer,
+            max_new_tokens=max_new_tokens,
+            do_sample=True,
+            top_p=top_p,
+            top_k=top_k,
+            temperature=temperature,
+            num_beams=1,
+        )
+        t = Thread(target=self.model.generate, kwargs=generate_kwargs)
+        t.start()
 
-            streamer = TextIteratorStreamer(
-                self.tokenizer, timeout=10.0, skip_prompt=True, skip_special_tokens=True
-            )
-            generate_kwargs = dict(
-                inputs,
-                streamer=streamer,
-                max_new_tokens=max_new_tokens,
-                do_sample=True,
-                top_p=top_p,
-                top_k=top_k,
-                temperature=temperature,
-                num_beams=1,
-            )
-            t = Thread(target=self.model.generate, kwargs=generate_kwargs)
-            t.start()
-
-            outputs = []
-            for text in streamer:
-                outputs.append(text)
-                yield "".join(outputs)
+        outputs = []
+        for text in streamer:
+            yield text
+            #outputs.append(text)
+            #yield "".join(outputs)
 
 
 def get_prompt(
         message: str, chat_history: list[tuple[str, str]], system_prompt: str
 ) -> str:
-    texts = [f"[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n"]
+    texts = [f"<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n"]
     for user_input, response in chat_history:
-        texts.append(f"{user_input.strip()} [/INST] {response.strip()} </s><s> [INST] ")
+        texts.append(f"{user_input.strip()} [/INST] {response.strip()} </s><s>[INST] ")
     texts.append(f"{message.strip()} [/INST]")
     return "".join(texts)
+
+#def get_prompt(
+#        message: str, chat_history: list[tuple[str, str]], system_prompt: str
+#) -> str:
+#    texts = [f"[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n"]
+#    for user_input, response in chat_history:
+#        texts.append(f"{user_input.strip()} [/INST] {response.strip()} </s><s> [INST] ")
+#    texts.append(f"{message.strip()} [/INST]")
+#    return "".join(texts)

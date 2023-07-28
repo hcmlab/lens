@@ -1,12 +1,11 @@
 import os
-from flask import Flask
+import json
+from flask import Flask, request
 from dotenv import load_dotenv
 from distutils.util import strtobool
 from waitress import serve
 from llama2_wrapper import Llama2Wrapper
-from flask import request
 from typing import Iterator
-
 
 # load environment
 load_dotenv()
@@ -36,7 +35,7 @@ llama2_wrapper.init_model()
 # defining helper
 def generate(
         message: str,
-        history_with_input: list[tuple[str, str]],
+        history: list[tuple[str, str]],
         system_prompt: str,
         max_new_tokens: int,
         temperature: float,
@@ -46,24 +45,25 @@ def generate(
     if max_new_tokens > MAX_MAX_NEW_TOKENS:
         raise ValueError
 
-    history = history_with_input[:-1]
     generator = llama2_wrapper.run(
         message, history, system_prompt, max_new_tokens, temperature, top_p, top_k
     )
-    try:
-        first_response = next(generator)
-        yield history + [(message, first_response)]
-    except StopIteration:
-        yield history + [(message, "")]
-    for response in generator:
-        yield history + [(message, response)]
+    return generator
+    #try:
+    #    first_response = next(generator)
+    #    yield history + [(message, first_response)]
+    #except StopIteration:
+        #yield history + [(message, "")]
+   # for response in generator:
+   #     yield history + [(message, response)]
 
 
-def process_example(message: str) -> tuple[str, list[tuple[str, str]]]:
-    generator = generate(message, [], DEFAULT_SYSTEM_PROMPT, 1024, 1, 0.95, 50)
-    for x in generator:
-        pass
-    return "", x
+#def process_example(message: str) -> tuple[str, list[tuple[str, str]]]:
+#    generator = generate(message, [], DEFAULT_SYSTEM_PROMPT, 1024, 1, 0.95, 50)
+#    return generator
+    #for x in generator:
+    #    pass
+    #return "", x
 
 
 def check_input_token_length(
@@ -81,12 +81,15 @@ def check_input_token_length(
 print("Starting nova-assistant")
 app = Flask(__name__)
 
-@app.route('/assist', methods=["POST"])
+@app.route("/assist", methods=["POST"])
 def assist():
     if request.method == "POST":
-        msg = request.form['msg']
-        print(process_example(msg))
+        user_request = json.loads(request.get_json())
+        message = user_request.get('message', '')
+        history =  user_request.get('history', [])
+        system_prompt = "".join( [user_request.get('system_promt', DEFAULT_SYSTEM_PROMPT), user_request.get('data_desc', ''), user_request.get('data','') ])
 
-
+        ret = generate(message=message, history=history, system_prompt=system_prompt, max_new_tokens=1024, temperature=1, top_p=0.95, top_k=50)
+        return app.response_class(ret, mimetype='text/csv')
 
 serve(app, host=HOST, port=PORT)
