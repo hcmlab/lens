@@ -85,6 +85,8 @@ app = Flask(__name__)
 def assist():
     if request.method == "POST":
         user_request = json.loads(request.get_json())
+        if isInstance(user_request, str)
+            user_request = json.loads(user_request)
         message = user_request.get('message', '')
         history =  user_request.get('history', [])
         system_prompt = "".join( [user_request.get('system_prompt', DEFAULT_SYSTEM_PROMPT), user_request.get('data_desc', ''), user_request.get('data','') ])
