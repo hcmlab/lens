@@ -70,7 +70,7 @@ app = Flask(__name__)
 @app.route("/assist", methods=["POST"])
 def assist():
     if request.method == "POST":
-        user_request = json.loads(request.get_json())
+        user_request = request.get_json()
         if isinstance(user_request, str):
             user_request = json.loads(user_request)
         message = user_request.get("message", "")
