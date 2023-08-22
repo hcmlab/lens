@@ -89,11 +89,8 @@ class Llama2Wrapper:
         t = Thread(target=self.model.generate, kwargs=generate_kwargs)
         t.start()
 
-        outputs = []
         for text in streamer:
             yield text
-            #outputs.append(text)
-            #yield "".join(outputs)
 
 
 def get_prompt(
@@ -104,12 +101,3 @@ def get_prompt(
         texts.append(f"{user_input.strip()} [/INST] {response.strip()} </s><s>[INST] ")
     texts.append(f"{message.strip()} [/INST]")
     return "".join(texts)
-
-#def get_prompt(
-#        message: str, chat_history: list[tuple[str, str]], system_prompt: str
-#) -> str:
-#    texts = [f"[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n"]
-#    for user_input, response in chat_history:
-#        texts.append(f"{user_input.strip()} [/INST] {response.strip()} </s><s> [INST] ")
-#    texts.append(f"{message.strip()} [/INST]")
-#    return "".join(texts)
