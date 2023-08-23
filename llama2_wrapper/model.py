@@ -33,7 +33,7 @@ class Llama2Wrapper:
             torch_dtype=torch.float16,
             load_in_8bit=load_in_8bit,
             offload_folder="offload_folder"
-            ).to(torch.device(config["device"]))
+            )#.to(torch.device(config["device"]))
         return model
 
     @classmethod
