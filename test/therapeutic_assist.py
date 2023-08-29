@@ -20,7 +20,7 @@ session_data = iterable.to_single_session_iterator('99Z9_S03')
 
 # tokenizer for length check
 from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained('../models/Llama-2-7b-chat-hf')
+tokenizer = AutoTokenizer.from_pretrained('..\\..\\..\\huggingface\\Llama-2-7b-chat-hf')
 
 data_r0 = session_data.annos[f'{roles[0]}.{scheme}'].dataframe
 data_r1 = session_data.annos[f'{roles[1]}.{scheme}'].dataframe
@@ -53,7 +53,7 @@ def post_stream(url, data):
                 print(line.decode(), end=' ')
     return answer
 
-url = 'http://137.250.171.154:1337/assist'
+url = 'http://137.250.171.56:1337/assist'
 payload = {
     "system_prompt": SYSTEM_PROMPT,
     "data_desc": DATA_DESC,
