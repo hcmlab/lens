@@ -12,8 +12,12 @@ from typing import Iterator
 # load environment
 load_dotenv()
 DEFAULT_SYSTEM_PROMPT = os.getenv("DEFAULT_SYSTEM_PROMPT", "")
-MAX_MAX_NEW_TOKENS = int(os.getenv("MAX_MAX_NEW_TOKENS", 2048))
 DEFAULT_MAX_NEW_TOKENS = int(os.getenv("DEFAULT_MAX_NEW_TOKENS", 1024))
+DEFAULT_TEMPERATURE = float(os.getenv("DEFAULT_TEMPERATURE", 0.8))
+DEFAULT_TOP_K = int(os.getenv("DEFAULT_TOP_K", 50))
+DEFAULT_TOP_P = float(os.getenv("DEFAULT_TOP_P", 0.95))
+
+MAX_MAX_NEW_TOKENS = int(os.getenv("MAX_MAX_NEW_TOKENS", 2048))
 MAX_INPUT_TOKEN_LENGTH = int(os.getenv("MAX_INPUT_TOKEN_LENGTH", 4000))
 MODEL_PATH = os.getenv("MODEL_PATH")
 DEVICE = os.getenv("DEVICE", "cpu")
@@ -84,20 +88,27 @@ def assist():
                 user_request.get("data", ""),
             ]
         )
-        temperature = user_request.get("temperature", 1)
+
+        temperature = user_request.get("temperature", DEFAULT_TEMPERATURE)
+        max_new_tokens = user_request.get("max_new_tokens", DEFAULT_MAX_NEW_TOKENS)
+        top_k = user_request.get("top_k", DEFAULT_TOP_K)
+        top_p = user_request.get("top_p", DEFAULT_TOP_P)
+
         try:
             temperature = float(temperature)
         except:
             return flask.Response(f'ERROR: Temperature "{temperature}" is not a valid float.', 505)
 
+        print(f'\nmessage="{message}",system_prompt={system_prompt},max_new_tokens={max_new_tokens},temp={temperature},top_k={top_k},top_p={top_p}\n')
+
         ret = generate(
             message=message,
             history=history,
             system_prompt=system_prompt,
-            max_new_tokens=DEFAULT_MAX_NEW_TOKENS,
+            max_new_tokens=max_new_tokens,
             temperature=temperature,
-            top_p=0.95,
-            top_k=50,
+            top_p=top_p,
+            top_k=top_k,
         )
         return app.response_class(ret, mimetype="text/csv")
 

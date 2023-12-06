@@ -90,6 +90,7 @@ class Llama2Wrapper:
         t.start()
 
         for text in streamer:
+            print(text, end=' ')
             yield text
 
 

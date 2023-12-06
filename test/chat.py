@@ -23,7 +23,7 @@ port = os.getenv('PORT')
 
 
 # Creating background context for llama
-SYSTEM_PROMPT = "You are a helpful and funny virtual agent."
+SYSTEM_PROMPT = "You are a helpful virtual agent."
 DATA_DESC = ""
 DATA = ""
 
@@ -32,7 +32,8 @@ url = f'http://{host}:{port}/assist'
 payload = {
     "system_prompt": SYSTEM_PROMPT,
     "data": DATA,
-    "data_desc": DATA_DESC
+    "data_desc": DATA_DESC,
+    "temperature": 0.5
 }
 
 history = []
