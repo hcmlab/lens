@@ -1,5 +1,7 @@
 import os
 import json
+
+import flask
 from flask import Flask, request
 from dotenv import load_dotenv
 from distutils.util import strtobool
@@ -33,13 +35,13 @@ llama2_wrapper.init_model()
 
 # defining helper
 def generate(
-    message: str,
-    history: list[tuple[str, str]],
-    system_prompt: str,
-    max_new_tokens: int,
-    temperature: float,
-    top_p: float,
-    top_k: int,
+        message: str,
+        history: list[tuple[str, str]],
+        system_prompt: str,
+        max_new_tokens: int,
+        temperature: float,
+        top_p: float,
+        top_k: int,
 ) -> Iterator[str]:
     if max_new_tokens > MAX_MAX_NEW_TOKENS:
         raise ValueError
@@ -51,7 +53,7 @@ def generate(
 
 
 def check_input_token_length(
-    message: str, chat_history: list[tuple[str, str]], system_prompt: str
+        message: str, chat_history: list[tuple[str, str]], system_prompt: str
 ) -> bool:
     input_token_length = llama2_wrapper.get_input_token_length(
         message, chat_history, system_prompt
@@ -82,13 +84,18 @@ def assist():
                 user_request.get("data", ""),
             ]
         )
+        temperature = user_request.get("temperature", 1)
+        try:
+            temperature = float(temperature)
+        except:
+            return flask.Response(f'ERROR: Temperature "{temperature}" is not a valid float.', 505)
 
         ret = generate(
             message=message,
             history=history,
             system_prompt=system_prompt,
             max_new_tokens=DEFAULT_MAX_NEW_TOKENS,
-            temperature=1,
+            temperature=temperature,
             top_p=0.95,
             top_k=50,
         )
