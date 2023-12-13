@@ -84,7 +84,6 @@ def assist():
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_new_tokens,
-            #n=top_k,
             api_base=api_base,
             custom_llm_provider="openai" # litellm will use the openai.Completion to make the request
         )
