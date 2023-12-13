@@ -40,25 +40,54 @@ llama2_wrapper.init_model()
 # defining helper
 
 
-def ess_wrapper(g):
-    for i, a in enumerate(g):
-        yield 'data:' + \
-            json.dumps(
-                {
-                    "object": "chat.completion.chunk",
-                    "choices": [{
-                        "delta": {
-                            "content": a,
-                            "role": 'assistant',
+def ess_wrapper(g: Iterator, stream=True):
+
+    if stream:
+        for i, a in enumerate(g):
+            yield 'data:' + \
+                json.dumps(
+                    {
+                        "object": "chat.completion.chunk",
+                        "choices": [{
+                            "delta": {
+                                "content": a,
+                                "role": 'assistant',
+                            },
+                            "finish_reason": None,
+                            "index": 0
                         },
-                        "finish_reason": None,
-                        "index": 0
-                    },
-                    ],
-                    "created": "1"
+                        ],
+                        "created": "1"
+                    }
+                ) + '\n'
+            yield '\n'
+    else:
+        _content = ''.join(g)
+        return {
+            "object":
+                "chat.completion",
+            "choices": [{
+                "finish_reason": "stop",
+                "index": 0,
+                "message": {
+                    "content":
+                        "The sky, a canvas of blue,\nA work of art, pure and true,\nA",
+                    "role": "assistant"
                 }
-            ) + '\n'
-        yield '\n'
+            }],
+            "id":
+                "chatcmpl-7fbd6077-de10-4cb4-a8a4-3ef11a98b7c8",
+            "created":
+                1699290237.408061,
+            "model":
+                "togethercomputer/llama-2-70b-chat",
+            "usage": {
+                "completion_tokens": 18,
+                "prompt_tokens": 14,
+                "total_tokens": 32
+            }
+        }
+
 
 
 def generate(
@@ -134,74 +163,22 @@ def chat_completion():
     print(
         f'\nmessage="{message}",system_prompt={system_prompt},max_new_tokens={max_new_tokens},temp={temperature},top_k={top_k},top_p={top_p}\n')
 
-    if data.get('stream', False):
+    print("got request for chat completion")
+    data = request.json
+    print("request data", data)
 
-        print("got request for chat completion")
-        data = request.json
-        print("request data", data)
+    ret = generate(
+        message=message,
+        history=history,
+        system_prompt=system_prompt,
+        max_new_tokens=max_new_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+    )
 
-        # def generate_answer(answer):
-        #     for i, a in enumerate(answer):
-        #         yield 'data:' +\
-        #             json.dumps(
-        #                 {
-        #                     "object": "chat.completion.chunk",
-        #                     "choices": [{
-        #                         "delta": {
-        #                             "content": a,
-        #                             "role": 'assistant',
-        #                         },
-        #                         "finish_reason": None,
-        #                         "index": 0
-        #                     },
-        #                     ],
-        #                     "created": "1"
-        #                 }
-        #         ) + '\n'
-        #         yield '\n'
-
-        ret = generate(
-            message=message,
-            history=history,
-            system_prompt=system_prompt,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            top_k=top_k,
-        )
-
-        return app.response_class(ess_wrapper(ret), mimetype='text/event-stream')
-
-    else:
-
-        print("got request for chat completion")
-        data = request.json
-        print("request data", data)
-        return {
-            "object":
-                "chat.completion",
-            "choices": [{
-                "finish_reason": "stop",
-                "index": 0,
-                "message": {
-                    "content":
-                        "The sky, a canvas of blue,\nA work of art, pure and true,\nA",
-                    "role": "assistant"
-                }
-            }],
-            "id":
-                "chatcmpl-7fbd6077-de10-4cb4-a8a4-3ef11a98b7c8",
-            "created":
-                1699290237.408061,
-            "model":
-                "togethercomputer/llama-2-70b-chat",
-            "usage": {
-                "completion_tokens": 18,
-                "prompt_tokens": 14,
-                "total_tokens": 32
-            }
-        }
-
+    stream = data.get('stream', False)
+    return app.response_class(ess_wrapper(ret, stream=stream), mimetype='text/event-stream')
 
 
 serve(app, host=HOST, port=PORT)
