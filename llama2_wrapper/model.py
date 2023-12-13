@@ -94,6 +94,7 @@ class Llama2Wrapper:
             yield text
 
 
+
 def get_prompt(
         message: str, chat_history: list[tuple[str, str]], system_prompt: str
 ) -> str:
