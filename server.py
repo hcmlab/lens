@@ -35,11 +35,21 @@ config = {
 # load the model
 llama2_wrapper = Llama2Wrapper(config)
 llama2_wrapper.init_tokenizer()
-llama2_wrapper.init_model()
+#llama2_wrapper.init_model()
+
+# list of supported models
+supported_models = [
+    {
+        "id": "llama7b",
+        "object": "model",
+        "created": 1702546785,
+        "owned_by": "meta",
+        "provider": "hcai",
+    }
+
+]
 
 # defining helper
-
-
 def ess_wrapper(g: Iterator, stream=True):
 
     if stream:
@@ -124,6 +134,15 @@ def check_input_token_length(
 print("Starting nova-assistant")
 app = Flask(__name__)
 
+
+# get supported models
+@app.route('/models', methods=["GET"])
+def get_models():
+    #https://platform.openai.com/docs/api-reference/images/createVariation?lang=curl
+    ret = json.dumps({"object": "list", "data": supported_models})
+    for c in ['{', '}', '[', ']', ',']:
+        ret = ret.replace(c, c + '\n ')
+    return ret
 
 # chat completion
 @app.route('/v1//chat/completions', methods=["POST", "GET"])

@@ -1,11 +1,13 @@
 import json
 import flask
+import os
+import logging
 from flask import Flask, request
 from dotenv import load_dotenv
 from waitress import serve
-from litellm import completion
+import utils
 from flask import stream_with_context
-import os
+from litellm import completion
 
 # load environment
 load_dotenv()
@@ -26,12 +28,13 @@ print("Starting nova-assistant")
 app = Flask(__name__)
 
 
-def stream_response(response):
-    for chunk in response:
-        yield chunk
+a = utils.get_valid_models()
+breakpoint()
+@app.route("/models", methods=["POST", "GET"])
+def get_models():
+    return ''
 
-
-@app.route("/assist", methods=["POST", "GET"])
+@app.route("/assist", methods=["POST"])
 def assist():
     if request.method == "POST":
         user_request = request.get_json()
@@ -52,6 +55,7 @@ def assist():
         top_k = user_request.get("top_k", DEFAULT_TOP_K)
         top_p = user_request.get("top_p", DEFAULT_TOP_P)
         model = user_request.get("model", MODEL)
+        stream = user_request.get("stream", True)
 
         try:
             temperature = float(temperature)
@@ -80,7 +84,7 @@ def assist():
         response = completion(
             model=model,
             messages=messages,
-            stream=True,
+            stream=stream,
             temperature=temperature,
             top_p=top_p,
             max_tokens=max_new_tokens,
@@ -88,14 +92,15 @@ def assist():
             custom_llm_provider="openai" # litellm will use the openai.Completion to make the request
         )
 
+        if stream:
+            def generate(response):
+                for chunk in response:
+                    yield chunk.choices[0].delta.content
 
-        def generate(response):
-            for chunk in response:
-                yield chunk.choices[0].delta.content
+            return app.response_class(stream_with_context(generate(response)))
+        else:
+            return app.response_class(response)
 
-        return app.response_class(stream_with_context(generate(response)))
-
-import logging
 logger = logging.getLogger('waitress')
 logger.setLevel(logging.INFO)
 serve(app, host=HOST, port=PORT)
