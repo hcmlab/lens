@@ -35,7 +35,7 @@ config = {
 # load the model
 llama2_wrapper = Llama2Wrapper(config)
 llama2_wrapper.init_tokenizer()
-#llama2_wrapper.init_model()
+llama2_wrapper.init_model()
 
 # list of supported models
 supported_models = [
@@ -160,14 +160,6 @@ def chat_completion():
             history.append((m['role'], m['content']))
     message = history[-1][1]
     history = history[:-1]
-
-    # system_prompt = "".join(
-    #     [
-    #         user_request.get("system_prompt", DEFAULT_SYSTEM_PROMPT),
-    #         user_request.get("data_desc", ""),
-    #         user_request.get("data", ""),
-    #     ]
-    # )
 
     temperature = data.get("temperature", DEFAULT_TEMPERATURE)
     max_new_tokens = data.get("max_tokens", DEFAULT_MAX_NEW_TOKENS)

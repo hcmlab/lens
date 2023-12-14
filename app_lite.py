@@ -8,6 +8,7 @@ from waitress import serve
 import utils
 from flask import stream_with_context
 from litellm import completion
+from utils import get_valid_models
 
 # load environment
 load_dotenv()
@@ -28,11 +29,9 @@ print("Starting nova-assistant")
 app = Flask(__name__)
 
 
-a = utils.get_valid_models()
-breakpoint()
 @app.route("/models", methods=["POST", "GET"])
 def get_models():
-    return ''
+    return get_valid_models()
 
 @app.route("/assist", methods=["POST"])
 def assist():
@@ -56,6 +55,7 @@ def assist():
         top_p = user_request.get("top_p", DEFAULT_TOP_P)
         model = user_request.get("model", MODEL)
         stream = user_request.get("stream", True)
+        provider = user_request.get("provider", None)
 
         try:
             temperature = float(temperature)
@@ -73,13 +73,11 @@ def assist():
 
         messages.append({'role': 'user', 'content': user_message})
 
-        if 'ollama' in model:
-            api_base = os.getenv('API_BASE_LOCAL_LLAMA')
-        elif 'custom' in model:
-            api_base = os.getenv('API_BASE_CUSTOM_LLAMA')
-        else:
-            api_base = None
+        # TODO DEPENDING ON THE PROVIDER WE LOAD A DIFFERENT BACKEND
+        if not provider:
+            flask.abort(400, 'Provider is none')
 
+        api_base = os.getenv('API_BASE_' + provider.upper())
 
         response = completion(
             model=model,
