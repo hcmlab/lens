@@ -9,3 +9,5 @@ provider/hcai/llama2_wrapper/__pycache__/__init__.cpython-311.pyc
 .idea/inspectionProfiles/profiles_settings.xml
 __pycache__/utils.cpython-311.pyc
 local_llama.env
+.env.txt
+__pycache__/app.cpython-311.pyc
