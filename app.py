@@ -1,77 +1,36 @@
-import os
 import json
-
 import flask
+import os
+import logging
 from flask import Flask, request
 from dotenv import load_dotenv
-from distutils.util import strtobool
 from waitress import serve
-from llama2_wrapper import Llama2Wrapper
-from typing import Iterator
+from flask import stream_with_context
+from litellm import completion
+from utils import get_valid_models
 
 # load environment
 load_dotenv()
+
 DEFAULT_SYSTEM_PROMPT = os.getenv("DEFAULT_SYSTEM_PROMPT", "")
 DEFAULT_MAX_NEW_TOKENS = int(os.getenv("DEFAULT_MAX_NEW_TOKENS", 1024))
 DEFAULT_TEMPERATURE = float(os.getenv("DEFAULT_TEMPERATURE", 0.8))
 DEFAULT_TOP_K = int(os.getenv("DEFAULT_TOP_K", 50))
 DEFAULT_TOP_P = float(os.getenv("DEFAULT_TOP_P", 0.95))
-
 MAX_MAX_NEW_TOKENS = int(os.getenv("MAX_MAX_NEW_TOKENS", 2048))
 MAX_INPUT_TOKEN_LENGTH = int(os.getenv("MAX_INPUT_TOKEN_LENGTH", 4000))
-MODEL_PATH = os.getenv("MODEL_PATH")
-DEVICE = os.getenv("DEVICE", "cpu")
-LOAD_IN_8BIT = bool(strtobool(os.getenv("LOAD_IN_8BIT", "True")))
+MODEL = os.getenv("MODEL")
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", 1337))
-assert MODEL_PATH is not None, f"MODEL_PATH is required, got: {MODEL_PATH}"
-
-config = {
-    "model_name": MODEL_PATH,
-    "load_in_8bit": LOAD_IN_8BIT,
-    "device": DEVICE,
-}
-
-# load the model
-llama2_wrapper = Llama2Wrapper(config)
-llama2_wrapper.init_tokenizer()
-llama2_wrapper.init_model()
-
-# defining helper
-def generate(
-        message: str,
-        history: list[tuple[str, str]],
-        system_prompt: str,
-        max_new_tokens: int,
-        temperature: float,
-        top_p: float,
-        top_k: int,
-) -> Iterator[str]:
-    if max_new_tokens > MAX_MAX_NEW_TOKENS:
-        raise ValueError
-
-    generator = llama2_wrapper.run(
-        message, history, system_prompt, max_new_tokens, temperature, top_p, top_k
-    )
-    return generator
-
-
-def check_input_token_length(
-        message: str, chat_history: list[tuple[str, str]], system_prompt: str
-) -> bool:
-    input_token_length = llama2_wrapper.get_input_token_length(
-        message, chat_history, system_prompt
-    )
-    if input_token_length > MAX_INPUT_TOKEN_LENGTH:
-        return False
-    else:
-        return True
-
 
 # building the app
 print("Starting nova-assistant")
 app = Flask(__name__)
 
+
+@app.route("/models", methods=["POST", "GET"])
+def get_models():
+    return get_valid_models()
 
 @app.route("/assist", methods=["POST"])
 def assist():
@@ -79,7 +38,7 @@ def assist():
         user_request = request.get_json()
         if isinstance(user_request, str):
             user_request = json.loads(user_request)
-        message = user_request.get("message", "")
+        user_message = user_request.get("message", "")
         history = user_request.get("history", [])
         system_prompt = "".join(
             [
@@ -93,24 +52,52 @@ def assist():
         max_new_tokens = user_request.get("max_new_tokens", DEFAULT_MAX_NEW_TOKENS)
         top_k = user_request.get("top_k", DEFAULT_TOP_K)
         top_p = user_request.get("top_p", DEFAULT_TOP_P)
+        model = user_request.get("model", MODEL)
+        stream = user_request.get("stream", True)
+        provider = user_request.get("provider", None)
 
         try:
             temperature = float(temperature)
         except:
             return flask.Response(f'ERROR: Temperature "{temperature}" is not a valid float.', 505)
 
-        print(f'\nmessage="{message}",system_prompt={system_prompt},max_new_tokens={max_new_tokens},temp={temperature},top_k={top_k},top_p={top_p}\n')
+        print(
+            f'\nmessage="{user_message}",system_prompt={system_prompt},max_new_tokens={max_new_tokens},temp={temperature},top_k={top_k},top_p={top_p}\n')
 
-        ret = generate(
-            message=message,
-            history=history,
-            system_prompt=system_prompt,
-            max_new_tokens=max_new_tokens,
+        messages = [{'role': 'system', 'content': system_prompt}]
+
+        for h in history:
+            messages.append({'role': 'user', 'content': h[0]})
+            messages.append({'role': 'assistant', 'content': h[1]})
+
+        messages.append({'role': 'user', 'content': user_message})
+
+        # TODO DEPENDING ON THE PROVIDER WE LOAD A DIFFERENT BACKEND
+        if not provider:
+            flask.abort(400, 'Provider is none')
+
+        api_base = os.getenv('API_BASE_' + provider.upper())
+
+        response = completion(
+            model=model,
+            messages=messages,
+            stream=stream,
             temperature=temperature,
             top_p=top_p,
-            top_k=top_k,
+            max_tokens=max_new_tokens,
+            api_base=api_base,
+            custom_llm_provider="openai" # litellm will use the openai.Completion to make the request
         )
-        return app.response_class(ret, mimetype="text/csv")
 
+        if stream:
+            def generate(response):
+                for chunk in response:
+                    yield chunk.choices[0].delta.content
 
+            return app.response_class(stream_with_context(generate(response)))
+        else:
+            return app.response_class(response)
+
+logger = logging.getLogger('waitress')
+logger.setLevel(logging.INFO)
 serve(app, host=HOST, port=PORT)
