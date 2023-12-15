@@ -2,15 +2,15 @@ import os
 import json
 
 import flask
-from flask import Flask, request, stream_with_context
+from flask import Flask, request
 from dotenv import load_dotenv
 from distutils.util import strtobool
 from waitress import serve
-from llama2_wrapper import Llama2Wrapper
+from provider.hcai.llama2_wrapper import Llama2Wrapper
 from typing import Iterator
 
 # load environment
-load_dotenv('./local_llama.env')
+load_dotenv('../../local_llama.env')
 DEFAULT_SYSTEM_PROMPT = os.getenv("DEFAULT_SYSTEM_PROMPT", "")
 DEFAULT_MAX_NEW_TOKENS = int(os.getenv("DEFAULT_MAX_NEW_TOKENS", 1024))
 DEFAULT_TEMPERATURE = float(os.getenv("DEFAULT_TEMPERATURE", 0.8))
