@@ -5,6 +5,28 @@ import litellm
 import requests
 import litellm.utils
 
+def _get_max_position_embeddings(model_name):
+    # Construct the URL for the config.json file
+    config_url = f"https://huggingface.co/{model_name}/raw/main/config.json"
+
+    try:
+        # Make the HTTP request to get the raw JSON file
+        response = requests.get(config_url)
+        response.raise_for_status()  # Raise an exception for bad responses (4xx or 5xx)
+
+        # Parse the JSON response
+        config_json = response.json()
+
+        # Extract and return the max_position_embeddings
+        max_position_embeddings = config_json.get("max_position_embeddings")
+
+        if max_position_embeddings is not None:
+            return max_position_embeddings
+        else:
+            return None
+    except requests.exceptions.RequestException as e:
+        return None
+
 def get_valid_models():
     """
     Returns a list of valid LLMs based on the set environment variables
@@ -40,6 +62,9 @@ def get_valid_models():
         #model, custom_llm_provider, dynamic_api_key, api_base
     }
     try:
+
+        model_cost_map = litellm.model_cost
+
         # get keys set in .env
         environ_keys = os.environ.keys()
         valid_providers = []
@@ -63,20 +88,34 @@ def get_valid_models():
                 t = template.copy()
                 t['id'] = "Azure-LLM"
                 models_for_provider.append(t)
+            # Custom Models
             if provider == "customopenai" or provider == "hcai":
                 try:
-                    url = os.environ.get('API_BASE_'+provider.upper())
+                    url = os.environ.get('API_BASE_'+provider.upper(), '')
                     resp = requests.get(url + '/models')
                     if resp.status_code == 200:
                         models_for_provider = json.loads(resp.content)['data']
                         # TODO litellm_provider is hardcoded to "openai". This indicates always a chat usecase whicht might not be the case. https://docs.litellm.ai/docs/providers/custom_openai_proxy
                         models_for_provider = [template.copy() | {'api_base' : url, 'provider' : provider, 'litellm_provider' : 'openai'} | m for m in models_for_provider]
                 except Exception as e:
-                    logging.error(msg=f'Error retreiving data from {url} : {e}')
+                    logging.error(msg=f'Error retrieving data from {url} : {e}')
+                    continue
+
+            # LITELLM Models
             else:
-                litellm.utils.get_llm_provider('gpt-3.5-turbo')
-                model_list = litellm.models_by_provider.get(provider, [])
-                models_for_provider = [template.copy() | {'id' : m, 'provider' : litellm.utils.get_llm_provider(m)[1] } | litellm.utils.get_model_info(m) for m in model_list]
+                #litellm.utils.get_llm_provider('gpt-3.5-turbo')
+                for model in litellm.models_by_provider.get(provider, []):
+                    t = template.copy()
+                    model_info = model_cost_map.get(model, {'input_cost_per_token': None, 'litellm_provider': None, 'max_tokens': None, 'mode':  None, 'output_cost_per_token': None})
+                    t.update( {
+                        'id': model,
+                        'provider': provider,
+                        'litellm_provider': model_info['litellm_provider'],
+                        'max_tokes': model_info['max_tokens']
+                    })
+                    models_for_provider.append(t)
+                #model_list = litellm.models_by_provider.get(provider, [])
+                #models_for_provider = [template.copy() | {'id' : m, 'provider' : provider, 'max_tokens' : _get_max_position_embeddings(m)} for m in model_list]
 
             valid_models.extend(models_for_provider)
         return valid_models

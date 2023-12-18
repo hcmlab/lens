@@ -27,6 +27,8 @@ PORT = int(os.getenv("PORT", 1337))
 print("Starting nova-assistant")
 app = Flask(__name__)
 
+_custom_provider = ['hcai', 'customopenai']
+
 
 @app.route("/models", methods=["POST", "GET"])
 def get_models():
@@ -55,6 +57,7 @@ def assist():
         model = user_request.get("model", MODEL)
         stream = user_request.get("stream", True)
         provider = user_request.get("provider", None)
+        custom_llm_provider = None
 
         try:
             temperature = float(temperature)
@@ -78,6 +81,13 @@ def assist():
 
         api_base = os.getenv('API_BASE_' + provider.upper())
 
+        # Build response
+
+        if provider in  _custom_provider:
+            custom_llm_provider = 'openai'
+        if provider != 'openai':
+            model = provider + '/' + model
+
         response = completion(
             model=model,
             messages=messages,
@@ -86,8 +96,10 @@ def assist():
             top_p=top_p,
             max_tokens=max_new_tokens,
             api_base=api_base,
-            custom_llm_provider="openai" # litellm will use the openai.Completion to make the request
+            custom_llm_provider=custom_llm_provider # litellm will use the openai.Completion to make the request
         )
+
+
 
         if stream:
             def generate(response):
