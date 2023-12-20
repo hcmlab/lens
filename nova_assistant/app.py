@@ -3,23 +3,17 @@ import flask
 import os
 import logging
 from flask import Flask, request
-from dotenv import load_dotenv
 from waitress import serve
 from flask import stream_with_context
 from litellm import completion
-from utils import get_valid_models
-
-# load environment
-load_dotenv()
+from nova_assistant.utils import get_valid_models
 
 DEFAULT_SYSTEM_PROMPT = os.getenv("DEFAULT_SYSTEM_PROMPT", "")
 DEFAULT_MAX_NEW_TOKENS = int(os.getenv("DEFAULT_MAX_NEW_TOKENS", 1024))
 DEFAULT_TEMPERATURE = float(os.getenv("DEFAULT_TEMPERATURE", 0.8))
 DEFAULT_TOP_K = int(os.getenv("DEFAULT_TOP_K", 50))
 DEFAULT_TOP_P = float(os.getenv("DEFAULT_TOP_P", 0.95))
-MAX_MAX_NEW_TOKENS = int(os.getenv("MAX_MAX_NEW_TOKENS", 2048))
-MAX_INPUT_TOKEN_LENGTH = int(os.getenv("MAX_INPUT_TOKEN_LENGTH", 4000))
-MODEL = os.getenv("MODEL")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL")
 HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", 1337))
 
@@ -54,9 +48,10 @@ def assist():
         max_new_tokens = user_request.get("max_new_tokens", DEFAULT_MAX_NEW_TOKENS)
         top_k = user_request.get("top_k", DEFAULT_TOP_K)
         top_p = user_request.get("top_p", DEFAULT_TOP_P)
-        model = user_request.get("model", MODEL)
+        model = user_request.get("model", DEFAULT_MODEL)
         stream = user_request.get("stream", True)
         provider = user_request.get("provider", None)
+        api_base = user_request.get("api_base", None)
         custom_llm_provider = None
 
         try:
@@ -79,11 +74,11 @@ def assist():
         if not provider:
             flask.abort(400, 'Provider is none')
 
-        api_base = os.getenv('API_BASE_' + provider.upper())
+        if api_base is None:
+            api_base = os.getenv('API_BASE_' + provider.upper())
 
         # Build response
-
-        if provider in  _custom_provider:
+        if provider in _custom_provider:
             custom_llm_provider = 'openai'
         if provider != 'openai':
             model = provider + '/' + model
@@ -99,8 +94,6 @@ def assist():
             custom_llm_provider=custom_llm_provider # litellm will use the openai.Completion to make the request
         )
 
-
-
         if stream:
             def generate(response):
                 for chunk in response:
@@ -111,5 +104,5 @@ def assist():
             return app.response_class(response)
 
 logger = logging.getLogger('waitress')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 serve(app, host=HOST, port=PORT)

@@ -44,10 +44,8 @@ payload = {
         ['das ist ein test', " The provided text appears to be a conversation between two characters, one of whom is a teenage boy, about sexual experiences and knowledge. The boy is seeking advice from his father on how to touch a woman's genitalia, and the father is providing him with various pieces of wisdom and humor. The conversation touches on topics such as puberty, sexual exploration, and the challenges of navigating sexual relationships.\nIt is important to note that the text is written in a colloquial and informal style, and some of the language and topics may be considered mature or offensive to some readers. However, it is important to recognize that the text is a reflection of the experiences and perspectives of the characters within the story, and it is not intended to be taken as a representation of the views of the author or the wider society.\nIf you have any specific questions or concerns about the text, please feel free to ask."]
                 ],
     'stream': True,
-    'model': 'llama7b',
-    'provider': 'hcai'
-    #''gpt-3.5-turbo'#
-    #'model': 'gpt-3.5-turbo'
+    'model': 'llama2',
+    'provider': 'ollama'
 }
 
 answer = post(url, payload)

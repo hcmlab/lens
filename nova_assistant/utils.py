@@ -3,7 +3,9 @@ import logging
 import os
 import litellm
 import requests
+import nova_assistant
 import litellm.utils
+
 
 def _get_max_position_embeddings(model_name):
     # Construct the URL for the config.json file
@@ -51,14 +53,14 @@ def get_valid_models():
     """
 
     template = {
-        'created': None,
         'id': None,
-        'owned_by': None,
-        'object': 'model',
         'provider': None,
-        'litellm_provider': None,
         'max_tokens': None,
-        'api_base': None
+        #'owned_by': None,
+        #'created': None,
+        #'object': 'model',
+        #'litellm_provider': None,
+        #'api_base': None
         #model, custom_llm_provider, dynamic_api_key, api_base
     }
     try:
@@ -103,15 +105,19 @@ def get_valid_models():
 
             # LITELLM Models
             else:
-                #litellm.utils.get_llm_provider('gpt-3.5-turbo')
-                for model in litellm.models_by_provider.get(provider, []):
+                model_list = nova_assistant.models_by_provider.get(provider, None)
+
+                if model_list is None:
+                    model_list = litellm.models_by_provider.get(provider, [])
+
+                for model in model_list:
                     t = template.copy()
                     model_info = model_cost_map.get(model, {'input_cost_per_token': None, 'litellm_provider': None, 'max_tokens': None, 'mode':  None, 'output_cost_per_token': None})
                     t.update( {
                         'id': model,
                         'provider': provider,
-                        'litellm_provider': model_info['litellm_provider'],
-                        'max_tokes': model_info['max_tokens']
+                        #'litellm_provider': model_info['litellm_provider'],
+                        'max_tokens': model_info['max_tokens']
                     })
                     models_for_provider.append(t)
                 #model_list = litellm.models_by_provider.get(provider, [])

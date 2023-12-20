@@ -6,7 +6,7 @@ from flask import Flask, request
 from dotenv import load_dotenv
 from distutils.util import strtobool
 from waitress import serve
-from provider.hcai.llama2_wrapper import Llama2Wrapper
+from nova_assistant.provider.hcai.llama2_wrapper import Llama2Wrapper
 from typing import Iterator
 
 # load environment
