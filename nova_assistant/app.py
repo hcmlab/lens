@@ -1,3 +1,6 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import json
 import flask
 import os
@@ -6,6 +9,7 @@ from flask import Flask, request
 from waitress import serve
 from flask import stream_with_context
 from litellm import completion
+print(sys.path)
 from nova_assistant.utils import get_valid_models
 
 DEFAULT_SYSTEM_PROMPT = os.getenv("DEFAULT_SYSTEM_PROMPT", "")
