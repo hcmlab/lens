@@ -56,6 +56,11 @@ def assist():
         stream = user_request.get("stream", True)
         provider = user_request.get("provider", None)
         api_base = user_request.get("api_base", None)
+        resp_format = user_request.get("resp_format", None)
+        # TODO PARSE CORRECTLY
+        force_deterministic = user_request.get("enforce_determinism", 'False')
+        if isinstance(force_deterministic, str):
+            force_deterministic = False if force_deterministic == 'False' else True
         custom_llm_provider = None
 
         try:
@@ -63,8 +68,8 @@ def assist():
         except:
             return flask.Response(f'ERROR: Temperature "{temperature}" is not a valid float.', 505)
 
-        print(
-            f'\nmessage="{user_message}",system_prompt={system_prompt},max_new_tokens={max_new_tokens},temp={temperature},top_k={top_k},top_p={top_p}\n')
+        #print(
+         #   f'\nmessage="{user_message}",system_prompt={system_prompt},max_new_tokens={max_new_tokens},temp={temperature},top_k={top_k},top_p={top_p},response_format={resp_format}\n')
 
         messages = [{'role': 'system', 'content': system_prompt}]
 
@@ -74,12 +79,15 @@ def assist():
 
         messages.append({'role': 'user', 'content': user_message})
 
+        print(messages)
+
         # TODO DEPENDING ON THE PROVIDER WE LOAD A DIFFERENT BACKEND
         if not provider:
             flask.abort(400, 'Provider is none')
 
-        if api_base is None:
-            api_base = os.getenv('API_BASE_' + provider.upper())
+        if api_base is None and provider is not None:
+                prov_ = provider.split('_')[0]
+                api_base = os.getenv('API_BASE_' + prov_.upper())
 
         # Build response
         if provider in _custom_provider:
@@ -87,24 +95,55 @@ def assist():
         if provider != 'openai':
             model = provider + '/' + model
 
-        response = completion(
-            model=model,
-            messages=messages,
-            stream=stream,
-            temperature=temperature,
-            top_p=top_p,
-            max_tokens=max_new_tokens,
-            api_base=api_base,
-            custom_llm_provider=custom_llm_provider # litellm will use the openai.Completion to make the request
-        )
+        # Send initial message without content to
+        if force_deterministic:
+            temperature = 0
+            response = completion(
+                model=model,
+                messages=[{'role': 'system', 'content': 'ignore this'}],
+                stream=False,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=1,
+                api_base=api_base,
+                custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
+            )
+            print(response)
+            print('Dummy request to enforce determination processed')
+
+        if resp_format is None:
+            response = completion(
+                model=model,
+                messages=messages,
+                stream=stream,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_new_tokens,
+                api_base=api_base,
+                custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
+            )
+        else:
+            response = completion(
+                model=model,
+                messages=messages,
+                stream=stream,
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_new_tokens,
+                api_base=api_base,
+                custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
+                format = resp_format
+            )
 
         if stream:
+            print('Streaming answer')
             def generate(response):
                 for chunk in response:
                     yield chunk.choices[0].delta.content
 
             return app.response_class(stream_with_context(generate(response)))
         else:
+            print('Returning answer')
             return app.response_class(response)
 
 logger = logging.getLogger('waitress')
