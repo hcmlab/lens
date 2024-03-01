@@ -75,7 +75,7 @@ def get_valid_models():
         provider_list = litellm.provider_list + ['hcai']
         for provider in provider_list:
             # edge case litellm has together_ai as a provider, it should be togetherai
-            provider = provider.replace("_", "")
+            #provider = provider.replace("_", "")
 
             # litellm standardizes expected provider keys to
             # PROVIDER_API_KEY. Example: OPENAI_API_KEY, COHERE_API_KEY
