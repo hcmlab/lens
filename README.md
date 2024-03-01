@@ -87,7 +87,7 @@ with requests.get(api_base + '/models') as response:
 
 request = {
     'model': 'llama2',
-    'provider': 'ollama',
+    'provider': 'ollama_chat',
     'message': 'Add the cost of an apple to the last thing I asked you.',
     'system_prompt': 'Your name is Nova. You are a a helpful shopping assistant.',
     'data_desc': 'The data is provided in the form of tuples where the first entry is the name of a fruit, and the second entry is the price of that fruit.',
