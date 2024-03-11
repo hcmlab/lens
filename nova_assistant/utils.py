@@ -3,7 +3,7 @@ import logging
 import os
 import litellm
 import requests
-import nova_assistant
+from nova_assistant import models_by_provider
 import litellm.utils
 
 
@@ -105,7 +105,7 @@ def get_valid_models():
 
             # LITELLM Models
             else:
-                model_list = nova_assistant.models_by_provider.get(provider, None)
+                model_list = models_by_provider.get(provider, None)
 
                 if model_list is None:
                     model_list = litellm.models_by_provider.get(provider, [])
