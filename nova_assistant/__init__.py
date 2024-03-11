@@ -32,7 +32,7 @@ def _ollama_models(api_base):
 # Explicitly overwriting l
 models_by_provider: dict = {
     "ollama": _ollama_models(os.getenv('API_BASE_OLLAMA')),
-    "ollama_chat": _ollama_models(os.getenv('API_BASE_OLLAMA')),
+    "ollama_chat": _ollama_models(os.getenv('API_BASE_OLLAMA_CHAT')),
     "openai": _openai_models(os.getenv('OPENAI_API_KEY'))
 }
 
