@@ -1,5 +1,6 @@
 flask
 waitress
 python-dotenv
-litellm
-#litellm==1.14.8
+litellm==1.27.4
+
+
