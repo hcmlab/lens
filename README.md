@@ -3,6 +3,10 @@ LENS: Learning and Exploring through Natural language Systems is a lightweight w
 LENS ist best used together with [NOVA](https://github.com/hcmlab/nova) and [DISCOVER](https://github.com/hcmlab/nova-server).
 
 # Usage
+
+LENS currently provides support for the [OpenAI](https://platform.openai.com/docs/overview) and the [OLLAMA](https://github.com/ollama/ollama/blob/main/docs/api.md).
+So before you start make sure to either have access to an OpenAI API key or to set up a local OLLAMA server.
+
 To install lens install python > 3.9 and run the following command in your terminal
 
 `pip install lens` 
