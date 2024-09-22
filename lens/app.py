@@ -1,6 +1,6 @@
-import os
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# import sys
+# import os
+# #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import json
 import flask
 import os
@@ -8,29 +8,76 @@ import logging
 from flask import Flask, request
 from waitress import serve
 from flask import stream_with_context
+from flask_caching import Cache
 from litellm import completion
-print(sys.path)
-from nova_assistant.utils import get_valid_models
+import argparse
+import dotenv
+from lens import __version__
+from lens import utils as lens_utils
+from pathlib import Path
+import requests
 
-DEFAULT_SYSTEM_PROMPT = os.getenv("DEFAULT_SYSTEM_PROMPT", "")
-DEFAULT_MAX_NEW_TOKENS = int(os.getenv("DEFAULT_MAX_NEW_TOKENS", 1024))
-DEFAULT_TEMPERATURE = float(os.getenv("DEFAULT_TEMPERATURE", 0.8))
-DEFAULT_TOP_K = int(os.getenv("DEFAULT_TOP_K", 50))
-DEFAULT_TOP_P = float(os.getenv("DEFAULT_TOP_P", 0.95))
-DEFAULT_MODEL = os.getenv("DEFAULT_MODEL")
-HOST = os.getenv("HOST", "127.0.0.1")
-PORT = int(os.getenv("PORT", 1337))
+parser = argparse.ArgumentParser(
+    description="Commandline arguments to configure the nova backend server"
+)
+parser.add_argument(
+    "--env",
+    type=str,
+    default="",
+    help="Path to the environment file to read config from",
+)
+
+
+# Parse cmdline arguments
+args = parser.parse_args()
+
+# Load environment variables
+env_path = Path(dotenv.find_dotenv())
+if args.env:
+    env_path = Path(args.env)
+    if not env_path.is_file():
+        raise FileNotFoundError(f'.env file not found at {env_path} ')
+if env_path.is_file():
+    print(f'Loading environment from {env_path.resolve()}')
+    dotenv.load_dotenv(env_path, verbose=True, override=True)
+
+# Set global values
+default_system_prompt = os.getenv("LENS_DEFAULT_SYSTEM_PROMPT", "")
+default_max_new_tokens = int(os.getenv("LENS_DEFAULT_MAX_NEW_TOKENS", 1024))
+default_temperature = float(os.getenv("LENS_DEFAULT_TEMPERATURE", 0.8))
+default_top_k = int(os.getenv("LENS_DEFAULT_TOP_K", 50))
+default_top_p = float(os.getenv("LENS_DEFAULT_TOP_P", 0.95))
+default_model = os.getenv("LENS_DEFAULT_MODEL")
+host = os.getenv("LENS_HOST", "127.0.0.1")
+port = int(os.getenv("LENS_PORT", 1337))
+
+
+# Initially loading available models
+# models_by_provider: dict = {
+#     "ollama": _ollama_models(os.getenv('API_BASE_OLLAMA')),
+#     "ollama_chat": _ollama_models(os.getenv('API_BASE_OLLAMA_CHAT')),
+#     "openai": _openai_models(os.getenv('OPENAI_API_KEY'))
+# }
 
 # building the app
-print("Starting nova-assistant")
+print(f"Starting LENS v{__version__}...")
+config = {
+    "DEBUG": True,          # some Flask specific configs
+    "CACHE_TYPE": "SimpleCache",  # Flask-Caching related configs
+    "CACHE_DEFAULT_TIMEOUT": 300
+}
+# tell Flask to use the above defined config
 app = Flask(__name__)
+app.config.from_mapping(config)
+cache = Cache(app)
+
 
 _custom_provider = ['hcai', 'customopenai']
 
-
 @app.route("/models", methods=["POST", "GET"])
+@cache.cached(timeout=600) # Cache results for 10 Minutes
 def get_models():
-    return get_valid_models()
+    return lens_utils.get_valid_models()
 
 @app.route("/assist", methods=["POST"])
 def assist():
@@ -42,23 +89,24 @@ def assist():
         history = user_request.get("history", [])
         system_prompt = "".join(
             [
-                user_request.get("system_prompt", DEFAULT_SYSTEM_PROMPT),
+                user_request.get("system_prompt", default_system_prompt),
                 user_request.get("data_desc", ""),
                 user_request.get("data", ""),
             ]
         )
 
-        temperature = user_request.get("temperature", DEFAULT_TEMPERATURE)
-        max_new_tokens = user_request.get("max_new_tokens", DEFAULT_MAX_NEW_TOKENS)
-        top_k = user_request.get("top_k", DEFAULT_TOP_K)
-        top_p = user_request.get("top_p", DEFAULT_TOP_P)
-        model = user_request.get("model", DEFAULT_MODEL)
+        temperature = user_request.get("temperature", default_temperature)
+        max_new_tokens = user_request.get("max_new_tokens", default_max_new_tokens)
+        top_k = user_request.get("top_k", default_top_k)
+        top_p = user_request.get("top_p", default_top_p)
+        model = user_request.get("model", default_model)
         stream = user_request.get("stream", True)
         provider = user_request.get("provider", None)
         api_base = user_request.get("api_base", None)
         resp_format = user_request.get("resp_format", None)
         # TODO PARSE CORRECTLY
         force_deterministic = user_request.get("enforce_determinism", 'False')
+
         if isinstance(force_deterministic, str):
             force_deterministic = False if force_deterministic == 'False' else True
         custom_llm_provider = None
@@ -68,9 +116,6 @@ def assist():
         except:
             return flask.Response(f'ERROR: Temperature "{temperature}" is not a valid float.', 505)
 
-        #print(
-         #   f'\nmessage="{user_message}",system_prompt={system_prompt},max_new_tokens={max_new_tokens},temp={temperature},top_k={top_k},top_p={top_p},response_format={resp_format}\n')
-
         messages = [{'role': 'system', 'content': system_prompt}]
 
         for h in history:
@@ -78,7 +123,6 @@ def assist():
             messages.append({'role': 'assistant', 'content': h[1]})
 
         messages.append({'role': 'user', 'content': user_message})
-
         print(messages)
 
         # TODO DEPENDING ON THE PROVIDER WE LOAD A DIFFERENT BACKEND
@@ -146,6 +190,9 @@ def assist():
             print('Returning answer')
             return app.response_class(response)
 
+
 logger = logging.getLogger('waitress')
 logger.setLevel(logging.DEBUG)
-serve(app, host=HOST, port=PORT)
+serve(app, host=host, port=port)
+
+
