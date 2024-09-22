@@ -7,7 +7,7 @@ name = "hcai-lens"
 authors = [
     {name = "Dominik Schiller", email = "dominik.schiller@uni-a.de"}
 ]
-description = "LENS is a lightweight webserver designed to use Large Language Models as tool for data disocvery in human interactions."
+description = "LENS is a lightweight webserver designed to use Large Language Models as tool for data exploration in human interactions."
 readme = "README.md"
 requires-python = ">=3.9"
 keywords = ["LENS", "DISCOVER", "LLM", "machine learning"]
@@ -23,6 +23,7 @@ classifiers = [
 ]
 dependencies = [
     "flask==3.0.0",
+    "flask-caching",
     "waitress",
     "python-dotenv",
     "psutil",

@@ -1,4 +1,6 @@
 # Description
+LENS: Learning and Exploring through Natural language Systems is a lightweight webserver designed to use Large Language Models as tool for data exploration in human interactions.
+LENS ist best used together with [NOVA](https://github.com/hcmlab/nova) and [DISCOVER](https://github.com/hcmlab/nova-server).
 
 # API
 LENS provides a REST API that can be called from any client. 
