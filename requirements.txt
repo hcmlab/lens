@@ -1,0 +1,9 @@
+flask~=2.3.3
+waitress~=2.1.2
+python-dotenv~=1.0.0
+litellm==1.27.4
+
+
+
+requests~=2.31.0
+Flask-Caching~=2.3.0
