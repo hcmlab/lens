@@ -16,3 +16,13 @@ lens/__pycache__/app.cpython-311.pyc
 lens/__pycache__/utils.cpython-311.pyc
 lens/.DS_Store
 /local/
+.DS_Store
+dist/hcai_lens-0.1.0-py3-none-any.whl
+dist/hcai_lens-0.1.0.tar.gz
+hcai_lens.egg-info/dependency_links.txt
+hcai_lens.egg-info/entry_points.txt
+hcai_lens.egg-info/PKG-INFO
+hcai_lens.egg-info/requires.txt
+hcai_lens.egg-info/SOURCES.txt
+hcai_lens.egg-info/top_level.txt
+.DS_Store

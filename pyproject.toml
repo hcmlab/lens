@@ -45,4 +45,4 @@ version = {attr = "lens.__version__"}
 Repository = "https://github.com/hcmlab/lens"
 
 [project.scripts]
-lens = "nova_server.app:_run"
+lens = "lens.app:_run"

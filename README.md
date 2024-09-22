@@ -2,6 +2,46 @@
 LENS: Learning and Exploring through Natural language Systems is a lightweight webserver designed to use Large Language Models as tool for data exploration in human interactions.
 LENS ist best used together with [NOVA](https://github.com/hcmlab/nova) and [DISCOVER](https://github.com/hcmlab/nova-server).
 
+# Usage
+To install lens install python > 3.9 and run the following command in your terminal
+
+`pip install lens` 
+
+Create a file named `lens.env` at suitable location. 
+Copy + Paste the contents from the [environment](#Environment) section to the newly created environment file and adapt the contents accordingly. 
+Run LENS using the following command: 
+
+`lens --env /path/to/lens.env`
+
+# Environment
+
+Example for .env file
+```
+# server
+LENS_HOST = 127.0.0.1
+LENS_PORT = 1337
+LENS_CACHE_DUR = 600 #results pf /models are cached for the specified amount in seconds
+
+# model
+DEFAULT_MODEL = llama3.1
+
+# API_BASES
+API_BASE_OLLAMA = http://127.0.0.1:11434
+API_BASE_OLLAMA_CHAT = http://127.0.0.1:11434
+
+# api keys
+OPENAI_API_KEY = <openai-api-key>
+OLLAMA_API_KEY = None # Api keys are required for each model. Set to None if model doesn't need it.
+
+# prompts
+LENS_DEFAULT_MAX_NEW_TOKENS = 1024
+LENS_DEFAULT_TEMPERATURE = 0.8
+LENS_DEFAULT_TOP_K = 50
+LENS_DEFAULT_TOP_P = 0.95
+LENS_DEFAULT_SYSTEM_PROMPT = "Your name is Nova. You are a a helpful assistant."
+```
+
+
 # API
 LENS provides a REST API that can be called from any client. 
 If applicable an endpoint accepts a reqeust body as json formatted dictionary.
@@ -53,33 +93,6 @@ The api provides the following endpoints:
                            
 </details>
 
-
-# Environment
-Example for .env file
-```
-# server
-LENS_HOST = 127.0.0.1
-LENS_PORT = 1337
-LENS_CACHE_DUR = 600 #results pf /models are cached for the specified amount in seconds
-
-# model
-DEFAULT_MODEL = llama3.1
-
-# API_BASES
-API_BASE_OLLAMA = http://127.0.0.1:11434
-API_BASE_OLLAMA_CHAT = http://127.0.0.1:11434
-
-# api keys
-OPENAI_API_KEY = <openai-api-key>
-OLLAMA_API_KEY = None # Api keys are required for each model. Set to None if model doesn't need it.
-
-# prompts
-LENS_DEFAULT_MAX_NEW_TOKENS = 1024
-LENS_DEFAULT_TEMPERATURE = 0.8
-LENS_DEFAULT_TOP_K = 50
-LENS_DEFAULT_TOP_P = 0.95
-LENS_DEFAULT_SYSTEM_PROMPT = "Your name is Nova. You are a a helpful assistant."
-```
 
 # Requests
 ```python
