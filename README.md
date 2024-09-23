@@ -9,7 +9,7 @@ So before you start make sure to either have access to an OpenAI API key or to s
 
 To install lens install python > 3.9 and run the following command in your terminal
 
-`pip install lens` 
+`pip install hcai-lens` 
 
 Create a file named `lens.env` at suitable location. 
 Copy + Paste the contents from the [environment](#Environment) section to the newly created environment file and adapt the contents accordingly. 
