@@ -35,21 +35,21 @@ API_BASE_OLLAMA_CHAT = http://127.0.0.1:11434
 
 # api keys
 OPENAI_API_KEY = <openai-api-key>
-OLLAMA_API_KEY = None # Api keys are required for each model. Set to None if model doesn't need it.
+OLLAMA_API_KEY = None # Api keys are required for each model. Set to None if the provider doesn't need it.
 
 # prompts
 LENS_DEFAULT_MAX_NEW_TOKENS = 1024
 LENS_DEFAULT_TEMPERATURE = 0.8
 LENS_DEFAULT_TOP_K = 50
 LENS_DEFAULT_TOP_P = 0.95
-LENS_DEFAULT_SYSTEM_PROMPT = "Your name is Nova. You are a a helpful assistant."
+LENS_DEFAULT_SYSTEM_PROMPT = "Your name is LENS. You are a helpful assistant."
 ```
 
 
 # API
 LENS provides a REST API that can be called from any client. 
-If applicable an endpoint accepts a reqeust body as json formatted dictionary.
-The api provides the following endpoints: 
+If applicable an endpoint accepts a request body as json JSON-formatted dictionary.
+The API provides the following endpoints: 
 
 <details>
  <summary><code>GET</code> <code><b>/models</b></code> <code>Retrieving a list of available models</code></summary>
@@ -110,7 +110,7 @@ request = {
     'model': 'llama3.1',
     'provider': 'ollama_chat',
     'message': 'Add the cost of an apple to the last thing I asked you.',
-    'system_prompt': 'Your name is LENS. You are a a helpful shopping assistant.',
+    'system_prompt': 'Your name is LENS. You are a helpful shopping assistant.',
     'data_desc': 'The data is provided in the form of tuples where the first entry is the name of a fruit, and the second entry is the price of that fruit.',
     'data' : '("apple", "0.50"), ("avocado", "1.0"), ("banana", "0.80")',
     'stream': True,
