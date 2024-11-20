@@ -1,6 +1,6 @@
 _MAJOR_VERSION = '1'
 _MINOR_VERSION = '0'
-_PATCH_VERSION = '0'
+_PATCH_VERSION = '1'
 
 __version__ = '.'.join([
     _MAJOR_VERSION,
