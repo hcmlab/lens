@@ -119,7 +119,8 @@ request = {
     'temperature': 0.8,
     'history': [
         ["How much does a banana cost?", "Hello there! As a helpful shopping assistant, I'd be happy to help you find the price of a banana. According to the data provided, the cost of a banana is $0.80. So, one banana costs $0.80."]
-    ]
+    ],
+    'n_ctx' : 5000
 }
 
 with requests.post(api_base + '/assist', json=request) as response:
