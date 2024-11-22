@@ -103,7 +103,7 @@ def _run():
             top_k = user_request.get("top_k", default_top_k)
             top_p = user_request.get("top_p", default_top_p)
             model = user_request.get("model", default_model)
-            n_ctx = user_request.get("n_ctx", None)
+            num_ctx = user_request.get("num_ctx", None)
             stream = user_request.get("stream", True)
             provider = user_request.get("provider", None)
             api_base = user_request.get("api_base", None)
@@ -152,6 +152,7 @@ def _run():
                     stream=False,
                     temperature=temperature,
                     top_p=top_p,
+                    top_k=top_k,
                     max_tokens=1,
                     api_base=api_base,
                     custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
@@ -162,11 +163,12 @@ def _run():
             if resp_format is None:
                 response = completion(
                     model=model,
-                    num_ctx=n_ctx,
+                    num_ctx=num_ctx,
                     messages=messages,
                     stream=stream,
                     temperature=temperature,
                     top_p=top_p,
+                    top_k=top_k,
                     max_tokens=max_new_tokens,
                     api_base=api_base,
                     custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
@@ -174,15 +176,16 @@ def _run():
             else:
                 response = completion(
                     model=model,
-                    num_ctx=n_ctx,
+                    num_ctx=num_ctx,
                     messages=messages,
                     stream=stream,
                     temperature=temperature,
                     top_p=top_p,
+                    top_k=top_k,
                     max_tokens=max_new_tokens,
                     api_base=api_base,
                     custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
-                    format = resp_format
+                    format=resp_format
                 )
 
             if stream:
