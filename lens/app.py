@@ -198,7 +198,7 @@ def _run():
             else:
                 print('Returning answer')
                 #return response#app.response_class(response)
-                return response.choices[0].model_extra['message'].model_extra['content']
+                return response.choices[0].model_extra['message'].content
 
 
     logger = logging.getLogger('waitress')
