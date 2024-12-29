@@ -74,19 +74,20 @@ The API provides the following endpoints:
 
 ##### Parameters
 
-> | name           | type     | data type  | description                                                                    |
-> |----------------|----------|------------|--------------------------------------------------------------------------------|
-> | `model`        | required | str        | The id of the model as provided by `/models`                                   |
-> | `provider`     | required | str        | The provider of the model as provided by `/models`                             |
-> | `message`      | required | str        | The prompt that should be send to the model                                    |
-> | `history`      | optional | list[list] | A history of previous question-answer-pairs in chronological order             |
-> | `systemprompt` | optional | str        | Set of instructions that define the model behaviour                            |
-> | `data_desc`    | optional | str        | An explanation of how context data should be interpreted by the model          |
-> | `data`         | optional | str        | Additional context data for the llm                                            |
-> | `stream`       | optional | bool       | If the answer should be streamed                                               |
-> | `top_k`        | optional | int        | Select among the k most probable next tokens                                   |
-> | `temperature`  | optional | int        | Degree of randomness to select next token among candidates                     |
-> | `api_base`     | optional | str        | Overwrites the api_base of the server for the given provider/model combination |  
+> | name           | type     | data type  | description                                                                     |
+> |----------------|----------|------------|---------------------------------------------------------------------------------|
+> | `model`        | required | str        | The id of the model as provided by `/models`                                    |
+> | `provider`     | required | str        | The provider of the model as provided by `/models`                              |
+> | `message`      | required | str        | The prompt that should be send to the model                                     |
+> | `history`      | optional | list[list] | A history of previous question-answer-pairs in chronological order              |
+> | `systemprompt` | optional | str        | Set of instructions that define the model behaviour                             |
+> | `data_desc`    | optional | str        | An explanation of how context data should be interpreted by the model           |
+> | `data`         | optional | str        | Additional context data for the llm                                             |
+> | `stream`       | optional | bool       | If the answer should be streamed                                                |
+> | `top_k`        | optional | int        | Select among the k most probable next tokens                                    |
+> | `temperature`  | optional | int        | Degree of randomness to select next token among candidates                      |
+> | `api_base`     | optional | str        | Overwrites the api_base of the server for the given provider/model combination  |  
+> | `num_ctx`      | optional | str        | The numer of context tokens from the input that should be processed by the llm. |  
 
 
 ##### Responses
@@ -119,7 +120,7 @@ request = {
     'temperature': 0.8,
     'history': [
         ["How much does a banana cost?", "Hello there! As a helpful shopping assistant, I'd be happy to help you find the price of a banana. According to the data provided, the cost of a banana is $0.80. So, one banana costs $0.80."]
-    ],
+    ],w
     'n_ctx' : 5000
 }
 

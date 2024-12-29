@@ -156,6 +156,7 @@ def _run():
                     max_tokens=1,
                     api_base=api_base,
                     custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
+                    additional_drop_params=["extra_body"]
                 )
                 print(response)
                 print('Dummy request to enforce determination processed')
@@ -172,6 +173,8 @@ def _run():
                     max_tokens=max_new_tokens,
                     api_base=api_base,
                     custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
+                    additional_drop_params=["extra_body"]
+
                 )
             else:
                 response = completion(
@@ -185,7 +188,9 @@ def _run():
                     max_tokens=max_new_tokens,
                     api_base=api_base,
                     custom_llm_provider=custom_llm_provider, # litellm will use the openai.Completion to make the request
-                    format=resp_format
+                    format=resp_format,
+                    additional_drop_params=["extra_body"]
+
                 )
 
             if stream:
